@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f7fb;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+/* Left side */
+.left {
+    flex: 1;
+    background: #eaf1ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.left h1 {
+    color: #111827;
+}
+
+/* Right side */
+.right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    width: 320px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.card h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 5px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.link {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.link a {
+    text-decoration: none;
+    color: #2563eb;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+    <div class="left">
+        <h1>Welcome Back 👋</h1>
+    </div>
+
+    <div class="right">
+        <div class="card">
+            <h2>Login</h2>
+
+            <input type="text" placeholder="Username">
+            <input type="password" placeholder="Password">
+
+            <button>Login</button>
+
+            <div class="link">
+                <a href="register.html">Create account</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

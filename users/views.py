@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, get_user_model
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny 
 from .serializers import *
 
 
@@ -15,53 +15,59 @@ from .serializers import *
 
 User = get_user_model()
 
-#Login API: 
-class LoginAPI(APIView):
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-        
-        
-        
-        #Structural validation: 
-        if username is None or password is None:
-           #raise serializers.ValidationError({"details":"Both fields are required"})  # You can also use either serializers.ValidationError or Response with the status code to indacate the actual problem. 
-           return Response({"details": "Both fields are required"}, status= status.HTTP_400_BAD_REQUEST)
-       
-       #authenication logic
-        user = authenticate(username = username, password = password)  #same as Users.objects.filter(username = username, password = password). authenticate deals with the hash password.
-        if user:
-            #token generation:
-            token, created = Token.objects.get_or_create(user = user)
-            return Response({
-                "message": "Login successful", 
-                "id":user.pk,
-                "username":username, 
-                "token":token.key}, status = 200)
-        
-        #falure handiling:
-        return Response({"details":"Invalid crendentials provided"}, status=status.HTTP_401_UNAUTHORIZED)
-    
-    
-    
-# registeration API: 
+# Register API: 
 class RegisterAPI(APIView):
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
+
         if serializer.is_valid():
-            user = serializer.save()
-            
-            # generate or retrieve token for the new custom user
-            token, created = Token.objects.get_or_create(user=user)
-            
+            serializer.save()
+
             return Response({
                 "message": "User registered successfully",
-                "user": serializer.data,
-                "token": token.key
+                "user": serializer.data
             }, status=status.HTTP_201_CREATED)
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
+    
+# login API: 
+class LoginAPI(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        # Validation
+        if not username or not password:
+            return Response(
+                {"detail": "Both fields are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Authentication
+        user = authenticate(username=username, password=password)
+
+        if user:
+            token, created = Token.objects.get_or_create(user=user)
+
+            return Response({
+                "message": "Login successful",
+                "id": user.id,
+                "username": user.username,
+                "token": token.key
+            }, status=status.HTTP_200_OK)
+
+        return Response(
+            {"detail": "Invalid credentials"},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
     
     
 #Logout API: 

@@ -1,9 +1,11 @@
 from rest_framework.routers import DefaultRouter
-from .views import *
+from .views import * 
 
 router = DefaultRouter()
 
-router.register('profiles', ProfileViewSet)
+
+router.register('manage_user', ManageUserViewSet, basename = 'manage_user')
+router.register('profiles', ProfileViewSet, basename='profile')
 router.register('courses', CourseViewSet)
 router.register('enrollments', EnrollmentViewSet)
 router.register('lessons', LessonViewSet)

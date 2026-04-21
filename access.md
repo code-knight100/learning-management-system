@@ -273,44 +273,34 @@ Financial transaction tracking
 
 ---
 
-# 11. NOTIFICATION
+# 11. NOTIFICATION ✅
 ## Purpose
 System messaging
 
 ## Rules
 
 - Instructor
-  - can create notifications
-     - only for students enrolled in their own courses
-     - only for course-related content (assignments, deadlines, updates, alerts)
-  - can view only their own notifications
-  - can mark notifications as read
-  - cannot edit or delete notifications
+ - create, view only own, edit , delete 
 
 ---
 
 - Sponsor
-  - can create notifications
-    - only for their sponsored students
-    - only for sponsorship-related content (funding, offers, updates, alerts)
-  - can view only their own notifications
-  - can mark notifications as read
-  - cannot edit or delete notifications
+ - create, view only own, edit , delete 
 
 ---
 
 - Student
-    - can view only their own notifications
-    - can mark notifications as read
-    - cannot create, edit, or delete notifications
+   - cannot create 
+   - can read only related to his enrolled course 
+   - can edit only marks as read field 
 
 ---
 
 - Admin
-    - can create notifications for any user
+    - can create notifications for any user 
     - can view all notifications
-    - edit announcement content (e.g. fix typo, update date)
-    - can delete notifications for moderation/system cleanup (optional)
+    - can edit notifications 
+    - can delete notifications 
 
 
 ## Validation
@@ -322,7 +312,7 @@ System messaging
 
 ---
 
-# 12. EMAIL LOG
+# 12. EMAIL LOG 
 ## Purpose
 Track system emails
 
@@ -332,7 +322,7 @@ Track system emails
   - full access to email logs
 
 - Student:
-  - no access
+  - 
 
 - Instructor:
   - no access

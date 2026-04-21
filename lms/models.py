@@ -164,7 +164,8 @@ class Notification(models.Model):
         ("AL", "Alert")
     ]
     
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sent_notifications", null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications", null=True, blank=True)
     message = models.TextField()
     type = models.CharField(max_length= 2, choices = TYPE_CHOICES, default = "IN")
     is_read = models.BooleanField(default = False)

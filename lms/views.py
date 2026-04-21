@@ -352,17 +352,33 @@ class PaymentViewSet(viewsets.ModelViewSet):
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
+    permission_classes = [NotificationPermission]
 
     def get_queryset(self):
         user = self.request.user
-        return Notification.objects.filter(user=user)
+
+        if has_role(user, "Admin"):
+            return Notification.objects.all()
+
+        if has_role(user, "Instructor") or has_role(user, "Sponsor"):
+            return Notification.objects.filter(sender=user)
+
+        if has_role(user, "Student"):
+            return Notification.objects.filter(
+                Q(sender__role="AD")
+                | Q(sender__role="IN", sender__courses__enrollments__student=user)
+                | Q(sender__role="SP", sender__sponsor__sponsorships__student=user)
+            ).distinct()
+
+        return Notification.objects.none()
 
 
 # ---------------- EMAIL LOG ----------------
 
-class EmailLogViewSet(viewsets.ReadOnlyModelViewSet):
+class EmailLogViewSet(viewsets.ModelViewSet):
     queryset = EmailLog.objects.all()
     serializer_class = EmailLogSerializer
+    permission_classes = [EmailLogPermission]
 
     def get_queryset(self):
         user = self.request.user

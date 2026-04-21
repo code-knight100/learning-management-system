@@ -1,5 +1,5 @@
 from rest_framework.permissions import *
-from .models import Enrollment
+from .models import Enrollment, Sponsorship
 from django.utils import timezone
 
 
@@ -397,3 +397,104 @@ class PaymentPermission(BasePermission):
             return obj.user == user
 
         return False
+
+
+# ---------------- NOTIFICATION ----------------
+
+class NotificationPermission(BasePermission):
+
+    def has_permission(self, request, view):
+        user = request.user
+
+        if not user or not user.is_authenticated:
+            return False
+
+        if has_role(user, "Admin"):
+            return True
+
+        if request.method in SAFE_METHODS:
+            return (
+                has_role(user, "Instructor")
+                or has_role(user, "Sponsor")
+                or has_role(user, "Student")
+            )
+
+        if request.method == "POST":
+            return has_role(user, "Instructor") or has_role(user, "Sponsor") or has_role(user, "Admin")
+
+        if request.method in ["PUT", "PATCH"]:
+            return (
+                has_role(user, "Instructor")
+                or has_role(user, "Sponsor")
+                or has_role(user, "Student")
+                or has_role(user, "Admin")
+            )
+
+        if request.method == "DELETE":
+            return has_role(user, "Instructor") or has_role(user, "Sponsor") or has_role(user, "Admin")
+
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+
+        if has_role(user, "Admin"):
+            return True
+
+        if request.method in SAFE_METHODS:
+            if has_role(user, "Student"):
+                if obj.sender and getattr(obj.sender, "role", None) == "AD":
+                    return True
+
+                if obj.sender and getattr(obj.sender, "role", None) == "IN":
+                    return Enrollment.objects.filter(
+                        student=user,
+                        course__instructor=obj.sender,
+                    ).exists()
+
+                if obj.sender and getattr(obj.sender, "role", None) == "SP":
+                    return Sponsorship.objects.filter(
+                        sponsor__user=obj.sender,
+                        student=user,
+                    ).exists()
+
+                return False
+            return obj.sender == user
+
+        if request.method in ["PUT", "PATCH"]:
+            if has_role(user, "Student"):
+                if obj.sender and getattr(obj.sender, "role", None) == "AD":
+                    return True
+
+                if obj.sender and getattr(obj.sender, "role", None) == "IN":
+                    return Enrollment.objects.filter(
+                        student=user,
+                        course__instructor=obj.sender,
+                    ).exists()
+
+                if obj.sender and getattr(obj.sender, "role", None) == "SP":
+                    return Sponsorship.objects.filter(
+                        sponsor__user=obj.sender,
+                        student=user,
+                    ).exists()
+
+                return False
+            return obj.sender == user
+
+        if request.method == "DELETE":
+            return obj.sender == user
+
+        return False
+
+
+# ---------------- EMAIL LOG ----------------
+
+class EmailLogPermission(BasePermission):
+
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(user and user.is_authenticated and has_role(user, "Admin"))
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        return bool(user and user.is_authenticated and has_role(user, "Admin"))

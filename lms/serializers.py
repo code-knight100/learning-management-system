@@ -905,14 +905,122 @@ class PaymentSerializer(serializers.ModelSerializer):
 # ---------------- NOTIFICATION ----------------
 
 class NotificationSerializer(serializers.ModelSerializer):
+    sender = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False)
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False, write_only=True)
+
     class Meta:
         model = Notification
-        fields = "__all__"
+        fields = [
+            "id",
+            "sender",
+            "user",
+            "message",
+            "type",
+            "is_read",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "sender", "created_at", "updated_at"]
+
+    def get_fields(self):
+        fields = super().get_fields()
+        user = self.context["request"].user
+        request = self.context.get("request")
+
+        if user.role != "AD":
+            fields["sender"].read_only = True
+
+        if user.role == "IN":
+            fields["user"].queryset = User.objects.filter(
+                role="ST",
+                enrollments__course__instructor=user,
+            ).distinct()
+
+        if user.role == "SP":
+            fields["user"].queryset = User.objects.filter(
+                role="ST",
+                sponsorships__sponsor__user=user,
+            ).distinct()
+
+        if request and request.method == "POST":
+            fields["is_read"].read_only = True
+
+        if user.role == "IN" and request and request.method in ["PUT", "PATCH"]:
+            for field_name in ["is_read"]:
+                fields.pop(field_name, None)
+
+        if user.role == "SP" and request and request.method in ["PUT", "PATCH"]:
+            for field_name in ["is_read"]:
+                fields.pop(field_name, None)
+
+        if user.role == "AD" and request and request.method in ["PUT", "PATCH"]:
+            fields.pop("is_read", None)
+
+        if user.role == "ST" and request and request.method in ["PUT", "PATCH"]:
+            for field_name in ["sender", "user", "message", "type", "created_at", "updated_at", "id"]:
+                fields.pop(field_name, None)
+
+        return fields
 
     def validate(self, data):
-        if not data.get("message"):
+        user = self.context["request"].user
+        request = self.context.get("request")
+        sender = data.get("sender", getattr(self.instance, "sender", None))
+        recipient = data.get("user", getattr(self.instance, "user", None))
+
+        if not data.get("message", getattr(self.instance, "message", None)):
             raise serializers.ValidationError("Message required")
+
+        if request and request.method == "POST":
+            if "is_read" in data and data.get("is_read"):
+                raise serializers.ValidationError("Cannot mark notification as read during creation")
+
+            if user.role == "AD":
+                if not sender:
+                    data["sender"] = user
+                if not recipient:
+                    raise serializers.ValidationError("User required")
+                return data
+
+            if user.role == "IN":
+                if not recipient:
+                    raise serializers.ValidationError("User required")
+                data["sender"] = user
+                return data
+
+            if user.role == "SP":
+                if not recipient:
+                    raise serializers.ValidationError("User required")
+                data["sender"] = user
+                return data
+
+            raise serializers.ValidationError("Not allowed")
+
+        if request and request.method in ["PUT", "PATCH"]:
+            if user.role == "ST":
+                return data
+
+            if user.role in ["IN", "SP", "AD"]:
+                return data
+
         return data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["sender"] = str(instance.sender) if instance.sender else None
+        data["user"] = str(instance.user) if instance.user else None
+        return data
+
+    def update(self, instance, validated_data):
+        user = self.context["request"].user
+
+        if user.role == "ST":
+            validated_data = {
+                "is_read": validated_data.get("is_read", instance.is_read)
+            }
+
+        return super().update(instance, validated_data)
+
 
 
 # ---------------- EMAIL LOG ----------------

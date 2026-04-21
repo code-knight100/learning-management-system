@@ -56,8 +56,8 @@ class PaymentAdmin(admin.ModelAdmin):
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ("id","user", "type", "is_read", "created_at")
-    search_fields = ("user__username", "message")
+    list_display = ("id","sender", "user", "type", "is_read", "created_at")
+    search_fields = ("sender__username", "user__username", "message")
     list_filter = ("type", "is_read")
 
 @admin.register(EmailLog)
